@@ -132,14 +132,14 @@ const setupEventListeners = () => {
   }
 };
 
-const getVideos = () => {
+const getVideos = (start = 0, end = 1e9) => {
   const videoElementsContainer = document.querySelector(
     config.videoElementsContainer
   );
   const videos = videoElementsContainer.getElementsByTagName(
     config.videoElement
   );
-  return [...videos];
+  return Array.from(videos).slice(start, end);
 };
 
 const getTimestamps = (videos) => {
@@ -300,7 +300,9 @@ const createRangeSummaryToggleButton = () => {
     if (summaryContainer.lastChild.innerText === calculateRangeButtonText) {
       summaryContainer.appendChild(rangeSummaryItem);
     } else {
-      summaryContainer.removeChild(summaryContainer.lastChild);
+      while (summaryContainer.lastChild.innerText != calculateRangeButtonText) {
+        summaryContainer.removeChild(summaryContainer.lastChild);
+      }
     }
   });
   return switchElement;
@@ -324,10 +326,65 @@ const createRangeSummaryItem = () => {
   const rangeSummaryInput = createRangeSummaryInput();
   rangeSummaryContainer.appendChild(rangeSummaryInput);
 
-  const calculateRangeSummaryButton = createButton("Calculate", () => {});
+  const calculateRangeSummaryButton = createButton("Calculate");
+  calculateRangeSummaryButton.addEventListener("click", showRangeSummary);
   calculateRangeSummaryButton.style.padding = "10px 75px";
   rangeSummaryContainer.appendChild(calculateRangeSummaryButton);
+
   return rangeSummaryContainer;
+};
+
+const getRangeSummary = (startCustomRangeIndex, endCustomRangeIndex) => {
+  const videos = getVideos(startCustomRangeIndex - 1, endCustomRangeIndex);
+  const timestamps = getTimestamps(videos);
+  const customDurationInSeconds = timestamps.reduce((a, b) => a + b);
+  const customPlaylistDuration = formatTimestamp(customDurationInSeconds);
+  return customPlaylistDuration;
+};
+
+const isProperRangeInput = (startCustomRangeIndex, endCustomRangeIndex) => {
+  const isProperInteger = (val) => {
+    const intValue = parseInt(val, 10);
+    return (
+      !isNaN(intValue) &&
+      val.trim() === intValue.toString() &&
+      intValue > 0 &&
+      intValue <= 1e9
+    );
+  };
+
+  return (
+    isProperInteger(startCustomRangeIndex) &&
+    isProperInteger(endCustomRangeIndex) &&
+    startCustomRangeIndex <= endCustomRangeIndex
+  );
+};
+
+const showRangeSummary = () => {
+  const startCustomRangeIndex = document.getElementById(
+    "customRangeInputStart"
+  ).value;
+  const endCustomRangeIndex = document.getElementById(
+    "customRangeInputEnd"
+  ).value;
+
+  const customDurationContainer = isProperRangeInput(
+    startCustomRangeIndex,
+    endCustomRangeIndex
+  )
+    ? getRangeSummary(startCustomRangeIndex, endCustomRangeIndex)
+    : createSummaryItem("Error:", `Please enter proper numbers!`, "");
+
+  customDurationContainer.id = "customDurationContainer";
+
+  const summaryContainer = document.getElementById(
+    "ytpdc-playlist-summary-new"
+  );
+
+  if (summaryContainer.lastChild.id === customDurationContainer.id) {
+    summaryContainer.removeChild(summaryContainer.lastChild);
+  }
+  summaryContainer.appendChild(customDurationContainer);
 };
 
 const createRangeSummaryInput = () => {
@@ -341,14 +398,14 @@ const createRangeSummaryInput = () => {
   startLabelContainer.style.paddingTop = "2px";
   startLabelContainer.textContent = "Start: ";
 
-  const startInput = createInput("0");
+  const startInput = createInput("customRangeInputStart");
 
   const endLabelContainer = document.createElement("p");
   endLabelContainer.style.paddingLeft = "12px";
   endLabelContainer.style.paddingTop = "2px";
   endLabelContainer.textContent = "End: ";
 
-  const endInput = createInput("0");
+  const endInput = createInput("customRangeInputEnd");
 
   container.appendChild(startLabelContainer);
   container.appendChild(startInput);
@@ -374,10 +431,9 @@ const createInput = (id) => {
   return input;
 };
 
-const createButton = (text, clickHandler) => {
+const createButton = (text) => {
   const button = document.createElement("button");
   button.textContent = text;
-  button.addEventListener("click", clickHandler);
   button.style.padding = "10px 15px";
   button.style.marginTop = "10px";
   button.style.border = "none";
