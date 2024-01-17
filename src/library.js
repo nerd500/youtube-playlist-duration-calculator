@@ -218,6 +218,10 @@ const createPlaylistSummary = ({ timestamps, playlistDuration }) => {
   );
   summaryContainer.appendChild(videosNotCounted);
 
+  //Range Summary container - Toggle Button
+  const rangeSummaryToggleButton = createRangeSummaryToggleButton();
+  summaryContainer.appendChild(rangeSummaryToggleButton);
+
   // Tooltip
   if (timestamps.length >= 100) {
     const tooltip = document.createElement("div");
@@ -281,6 +285,119 @@ const createSummaryItem = (label, value, valueColor = "#facc15") => {
   container.appendChild(valueContainer);
 
   return container;
+};
+
+const createRangeSummaryToggleButton = () => {
+  const calculateRangeButtonText = "CALCULATE CUSTOM DURATION";
+  const switchElement = createButton(calculateRangeButtonText);
+
+  const rangeSummaryItem = createRangeSummaryItem();
+
+  switchElement.addEventListener("click", (e) => {
+    const summaryContainer = document.getElementById(
+      "ytpdc-playlist-summary-new"
+    );
+    if (summaryContainer.lastChild.innerText === calculateRangeButtonText) {
+      summaryContainer.appendChild(rangeSummaryItem);
+    } else {
+      summaryContainer.removeChild(summaryContainer.lastChild);
+    }
+  });
+  return switchElement;
+};
+
+const createRangeSummaryItem = () => {
+  const rangeSummaryContainer = document.createElement("div");
+
+  rangeSummaryContainer.id = "rangeSummaryContainer";
+
+  rangeSummaryContainer.style.display = "flex";
+  rangeSummaryContainer.style.flexDirection = "column";
+  rangeSummaryContainer.style.justifyContent = "center";
+  rangeSummaryContainer.style.alignItems = "start";
+  rangeSummaryContainer.style.marginTop = "18px";
+  rangeSummaryContainer.style.padding = "16px";
+  rangeSummaryContainer.style.borderRadius = "16px";
+  rangeSummaryContainer.style.background = "rgba(255,255,255,0.1)";
+
+  // Total Duration
+  const rangeSummaryInput = createRangeSummaryInput();
+  rangeSummaryContainer.appendChild(rangeSummaryInput);
+
+  const calculateRangeSummaryButton = createButton("Calculate", () => {});
+  calculateRangeSummaryButton.style.padding = "10px 75px";
+  rangeSummaryContainer.appendChild(calculateRangeSummaryButton);
+  return rangeSummaryContainer;
+};
+
+const createRangeSummaryInput = () => {
+  const container = document.createElement("div");
+  container.style.margin = "8px 0px";
+  container.style.display = "flex";
+  container.style.flexDirection = "row";
+  container.style.justifyContent = "between";
+
+  const startLabelContainer = document.createElement("p");
+  startLabelContainer.style.paddingTop = "2px";
+  startLabelContainer.textContent = "Start: ";
+
+  const startInput = createInput("0");
+
+  const endLabelContainer = document.createElement("p");
+  endLabelContainer.style.paddingLeft = "12px";
+  endLabelContainer.style.paddingTop = "2px";
+  endLabelContainer.textContent = "End: ";
+
+  const endInput = createInput("0");
+
+  container.appendChild(startLabelContainer);
+  container.appendChild(startInput);
+
+  container.appendChild(endLabelContainer);
+  container.appendChild(endInput);
+
+  return container;
+};
+
+const createInput = (id) => {
+  const input = document.createElement("input");
+  input.type = "text";
+  input.id = id;
+  input.style.marginLeft = "8px";
+  input.style.padding = "8px";
+  input.style.border = "1px solid #ccc";
+  input.style.borderRadius = "4px";
+  input.style.backgroundColor = "white";
+  input.style.width = "40px";
+  input.style.height = "7px";
+  input.style.textAlign = "center";
+  return input;
+};
+
+const createButton = (text, clickHandler) => {
+  const button = document.createElement("button");
+  button.textContent = text;
+  button.addEventListener("click", clickHandler);
+  button.style.padding = "10px 15px";
+  button.style.marginTop = "10px";
+  button.style.border = "none";
+  button.style.borderRadius = "4px";
+  button.style.backgroundColor = "#4CAF50"; // Green background color
+  button.style.color = "white";
+  button.style.fontWeight = "bold";
+  button.style.cursor = "pointer";
+  button.style.transition = "background-color 0.3s";
+
+  // Add hover effect
+  button.addEventListener("mouseover", () => {
+    button.style.backgroundColor = "#45a049"; // Darker green on hover
+  });
+
+  // Reset background color on mouseout
+  button.addEventListener("mouseout", () => {
+    button.style.backgroundColor = "#4CAF50";
+  });
+  return button;
 };
 
 const addSummaryToPage = (summary) => {
